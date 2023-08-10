@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "normesh"
+version = "0.0.1"
+description = "normesh routing and security platform"
+authors = ["Nathan Eric Norman <nenorman@norme.sh>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-mock = "^3.11.1"
+black = "^23.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
