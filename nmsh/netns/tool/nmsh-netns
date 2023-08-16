@@ -1,4 +1,20 @@
 #!/bin/bash
+#   nmsh-netns command wrapper
+#   Copyright (C) 2023  Nathan Eric Norman
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 
 set -e
 set -x
@@ -36,7 +52,6 @@ while getopts ':dix:h' opt; do
             exit 1
         fi
         NS_INIT=1
-        echo "opt 'i'"
         ;;
 
       d)
@@ -46,12 +61,10 @@ while getopts ':dix:h' opt; do
             exit 1
         fi
         NS_DEL=1
-        echo "opt 'd'"
         ;;
 
       x)
         foo="${OPTARG}"
-        echo "opt 'x'"
         ;;
 
       :)
@@ -78,7 +91,6 @@ if [ "$#" -lt "1" ]; then
 fi
 
 NS="$1"
-# echo "NAMESPACE ${NS}"
 shift
 
 # read config file here
@@ -86,8 +98,6 @@ IFACES=(enp2s0 enp3s0 enp4s0)
 
 if [ -n "${NS_INIT}" ]; then
     echo -n "Initializing network namespace '${NS}' "
-    # create the network namespace
-    #/usr/bin/env ip netns add "${NS}"
 
     # move interfaces into NS
     for IFACE in "${IFACES[@]}"; do
@@ -105,7 +115,7 @@ if [ -n "${NS_INIT}" ]; then
         echo -n "."
     done
 
-    # enable forwarding (this whould be a separate option at some point)
+    # enable forwarding (this could be a separate option at some point)
     /usr/bin/env ip netns exec "${NS}" sysctl net.ipv4.ip_forward=1
     /usr/bin/env ip netns exec "${NS}" sysctl net.ipv6.conf.all.forwarding=1
 
