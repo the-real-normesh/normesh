@@ -1,0 +1,126 @@
+#!/bin/bash
+
+set -e
+set -x
+
+# it would be cool to consume environment variables too
+
+usage() {
+    echo    "Usage:"
+    echo    " $(basename $0) [ -i|-d ] <name>"
+#   echo    " $(basename $0) [options] <name> <command>..."
+    echo    " $(basename $0) <name> <command>..."
+    echo    " $(basename $0) -h"
+    echo -e "\nManage named network namespaces."
+    echo -e "\nOptions:"
+    echo    " -i                Initialize network namespace <name>"
+    echo    " -d                Delete network namespace <name>"
+    echo    " -h                Help"
+    echo    "Command:"
+    echo    " command...        execute command in network namespace <name>"
+}
+
+unset NS_INIT NS_DEL NS
+
+while getopts ':dix:h' opt; do
+    case "${opt}" in
+      h)
+        usage
+        exit 0
+        ;;
+
+      i)
+        if [ -n "${NS_DEL}" ]; then
+            echo -e "Options -i and -d are mutually exclusive\n"
+            usage
+            exit 1
+        fi
+        NS_INIT=1
+        echo "opt 'i'"
+        ;;
+
+      d)
+        if [ -n "${NS_INIT}" ]; then
+            echo -e "Options -i and -d are mutually exclusive\n"
+            usage
+            exit 1
+        fi
+        NS_DEL=1
+        echo "opt 'd'"
+        ;;
+
+      x)
+        foo="${OPTARG}"
+        echo "opt 'x'"
+        ;;
+
+      :)
+        echo -e "option requires an argument.\n"
+        usage
+        exit 1
+        ;;
+
+      ?)
+        echo "Invalid option."
+        usage
+        exit 1
+        ;;
+
+    esac
+done
+
+shift "$(($OPTIND -1))"
+
+if [ "$#" -lt "1" ]; then
+    echo -e "Error: missing network namespace <name>.\n"
+    usage
+    exit 1
+fi
+
+NS="$1"
+# echo "NAMESPACE ${NS}"
+shift
+
+# read config file here
+IFACES=(enp2s0 enp3s0 enp4s0)
+
+if [ -n "${NS_INIT}" ]; then
+    echo -n "Initializing network namespace '${NS}' "
+    # create the network namespace
+    #/usr/bin/env ip netns add "${NS}"
+
+    # move interfaces into NS
+    for IFACE in "${IFACES[@]}"; do
+        /usr/bin/env ip link set "${IFACE}" netns "${NS}"
+        echo -n "."
+    done
+
+    # enable loopback
+    /usr/bin/env ip -n "${NS}" link set lo up
+    echo -n "."
+
+    # enable NS interfaces
+    for IFACE in "${IFACES[@]}"; do
+        /usr/bin/env ip -n "${NS}" link set "${IFACE}" up
+        echo -n "."
+    done
+
+    # enable forwarding (this whould be a separate option at some point)
+    /usr/bin/env ip netns exec "${NS}" sysctl net.ipv4.ip_forward=1
+    /usr/bin/env ip netns exec "${NS}" sysctl net.ipv6.conf.all.forwarding=1
+
+    echo " done."
+elif [ -n "${NS_DEL}" ]; then
+    echo -n "Deleting network namespace '${NS}' "
+    # figure this out
+
+    echo " done."
+elif [ "$#" -gt "0" ]; then
+    # oh hey, more arguments
+    /usr/bin/env ip netns exec "${NS}" "$@"
+else
+    echo -e "Not enough arguments.\n"
+    usage
+    exit 1
+fi
+
