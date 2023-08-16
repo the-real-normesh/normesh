@@ -1,0 +1,20 @@
+[Unit]
+Description=Set up network namespace %I
+
+After=nmsh-netns@.service
+BindsTo=nmsh-netns@.service
+Before=network.target network-online.target
+
+[Install]
+WantedBy=network-online.target
+WantedBy=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+# need to use PrivateNetwork=no if you are moving interfaces
+PrivateNetwork=no
+
+ExecStart=/home/normesh_core/nmsh-netns/scripts/nmsh-netns -i %I
+
+ExecStop=/home/normesh_core/nmsh-netns/scripts/nmsh-netns -d %I
