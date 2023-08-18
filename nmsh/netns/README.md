@@ -1,14 +1,14 @@
 # nmsh-netns
 
-Create and use named network namespaces with Sytemd.
+Create and use named network namespaces with Systemd.
 
 ## Version
 
 ## Unit file templates
-**nmsh-netns@.service**
+**nmsh-netns\@.service**
 - create a named network namespace which other Systemd services can bind to
 
-**nmsh-netns-setup**
+**nmsh-netns-setup\@.service**
 - perform setup of a created network namespace
 
 ## Usage
